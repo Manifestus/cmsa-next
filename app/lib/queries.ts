@@ -3,13 +3,13 @@ import { apiGet, apiPost, apiDelete } from './api';
 
 // Cash sessions
 export const useOpenSessions = () =>
-    useQuery({ queryKey: ['cash','sessions','open'], queryFn: () => apiGet('/api/cash/sessions?status=open') });
+    useQuery({ queryKey: ['cash','sessions','open'], queryFn: () => apiGet('/cash/sessions?status=open') });
 
 export const useOpenSession = () => {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (payload: { registerId: string; openingFloat: number }) =>
-            apiPost('/api/cash/sessions/open', payload),
+            apiPost('/cash/sessions/open', payload),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['cash','sessions','open'] }),
     });
 };
@@ -18,7 +18,7 @@ export const useCloseSession = (sessionId: string) => {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (payload: { declaredTotal: number }) =>
-            apiPost(`/api/cash/sessions/${sessionId}/close`, payload),
+            apiPost(`/cash/sessions/${sessionId}/close`, payload),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['cash','sessions','open'] });
             qc.invalidateQueries({ queryKey: ['cash','sessions','closed'] });
@@ -29,7 +29,7 @@ export const useCloseSession = (sessionId: string) => {
 export const useCashMovements = (sessionId?: string) =>
     useQuery({
         queryKey: ['cash','movements',sessionId ?? 'all'],
-        queryFn: () => apiGet(`/api/cash/movements${sessionId ? `?sessionId=${sessionId}` : ''}`),
+        queryFn: () => apiGet(`/cash/movements${sessionId ? `?sessionId=${sessionId}` : ''}`),
         enabled: !!sessionId,
     });
 
@@ -37,7 +37,7 @@ export const useCreateMovement = () => {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (payload: { sessionId: string; type: 'deposit'|'withdrawal'|'adjustment'|'sale'; amount: number; reference?: string }) =>
-            apiPost('/api/cash/movements', payload),
+            apiPost('/cash/movements', payload),
         onSuccess: (_data, vars) => {
             qc.invalidateQueries({ queryKey: ['cash','movements', vars.sessionId] });
             qc.invalidateQueries({ queryKey: ['cash','summary', vars.sessionId] });
@@ -48,7 +48,7 @@ export const useCreateMovement = () => {
 export const useCashSummary = (sessionId?: string) =>
     useQuery({
         queryKey: ['cash','summary', sessionId ?? 'none'],
-        queryFn: () => apiGet(`/api/cash/summary?sessionId=${sessionId}`),
+        queryFn: () => apiGet(`/cash/summary?sessionId=${sessionId}`),
         enabled: !!sessionId,
     });
 
@@ -60,11 +60,11 @@ export const useCreateInvoice = () => useMutation({
         locationId: string;
         registerId?: string | null;
         invoiceNo?: string;
-    }) => apiPost('/api/invoice', payload),
+    }) => apiPost('/invoice', payload),
 });
 
 export const useInvoice = (id?: string) =>
-    useQuery({ queryKey: ['invoice', id], queryFn: () => apiGet(`/api/invoices/${id}`), enabled: !!id });
+    useQuery({ queryKey: ['invoice', id], queryFn: () => apiGet(`/invoices/${id}`), enabled: !!id });
 
 export const useAddLine = (invoiceId: string) => {
     const qc = useQueryClient();
@@ -74,7 +74,7 @@ export const useAddLine = (invoiceId: string) => {
             serviceId?: string; productId?: string;
             description?: string;
             qty: number; unitPrice: number; discountPct?: number; taxRatePct?: number; providerId?: string;
-        }) => apiPost(`/api/invoices/${invoiceId}/lines`, p),
+        }) => apiPost(`/invoices/${invoiceId}/lines`, p),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
     });
 };
@@ -82,7 +82,7 @@ export const useAddLine = (invoiceId: string) => {
 export const usePostInvoice = (invoiceId: string) => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: () => apiPost(`/api/invoices/${invoiceId}/post`, {}),
+        mutationFn: () => apiPost(`/invoices/${invoiceId}/post`, {}),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
     });
 };
@@ -99,7 +99,7 @@ export const usePayInvoice = (invoiceId: string) => {
             posTerminalId?: string;
             transferStatus?: 'completed'|'not_completed';
             amountTendered?: number; // for change
-        }) => apiPost(`/api/invoices/${invoiceId}/payments`, p),
+        }) => apiPost(`/invoices/${invoiceId}/payments`, p),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['invoice', invoiceId] }),
     });
 };
